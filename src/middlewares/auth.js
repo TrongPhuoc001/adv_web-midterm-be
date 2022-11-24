@@ -1,7 +1,12 @@
 const passport = require('passport');
 const httpStatus = require('http-status');
+const { OAuth2Client } = require('google-auth-library');
 const ApiError = require('../utils/ApiError');
 const { roleRights } = require('../config/roles');
+const config = require('../config/config');
+const userService = require('../services/user.service');
+
+const client = new OAuth2Client(config.google.clientId);
 
 const verifyCallback = (req, resolve, reject, requiredRights) => async (err, user, info) => {
   if (err || info || !user) {
@@ -30,4 +35,22 @@ const auth =
       .catch((err) => next(err));
   };
 
-module.exports = auth;
+const googleAuth = async (req, res, next) => {
+  try {
+    const ticket = await client.verifyIdToken({
+      idToken: req.body.idToken,
+      audience: config.google.clientId,
+    });
+    const payload = ticket.getPayload();
+    const user = await userService.getOrCreateUserByPayload(payload);
+    req.user = user;
+    next();
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = {
+  auth,
+  googleAuth,
+};

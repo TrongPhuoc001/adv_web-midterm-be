@@ -30,7 +30,6 @@ const userSchema = mongoose.Schema(
     },
     password: {
       type: String,
-      required: true,
       trim: true,
       minlength: 8,
       validate(value) {
@@ -52,6 +51,16 @@ const userSchema = mongoose.Schema(
     imgUrl: {
       type: String,
       default: 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y',
+    },
+    social: {
+      google: {
+        id: String,
+        email: String,
+      },
+      facebook: {
+        id: String,
+        email: String,
+      },
     },
   },
   {

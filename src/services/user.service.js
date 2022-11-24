@@ -89,6 +89,31 @@ const updateUserImg = async (userId, imgUrl) => {
   return user;
 };
 
+const getOrCreateUserByPayload = async (payload) => {
+  const user = await User.findOne({
+    $or: [{ 'socical.google.id': payload.sub }, { 'socical.facebook.id': payload.sub }, { email: payload.email }],
+  });
+  if (user) {
+    return user;
+  }
+
+  const newUser = await createUser({
+    firstName: payload.given_name,
+    lastName: payload.family_name,
+    email: payload.email,
+    isEmailVerify: true,
+    role: 'user',
+    imgUrl: payload.picture,
+    social: {
+      google: {
+        id: payload.sub,
+        email: payload.email,
+      },
+    },
+  });
+  return newUser;
+};
+
 module.exports = {
   createUser,
   queryUsers,
@@ -97,4 +122,5 @@ module.exports = {
   updateUserById,
   deleteUserById,
   updateUserImg,
+  getOrCreateUserByPayload,
 };

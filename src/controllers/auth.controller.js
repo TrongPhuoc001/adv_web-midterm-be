@@ -16,6 +16,12 @@ const login = catchAsync(async (req, res) => {
   res.send({ user, tokens });
 });
 
+const loginGoogle = catchAsync(async (req, res) => {
+  const { user } = req;
+  const tokens = await tokenService.generateAuthTokens(user);
+  res.send({ user, tokens });
+});
+
 const logout = catchAsync(async (req, res) => {
   await authService.logout(req.body.refreshToken);
   res.status(httpStatus.NO_CONTENT).send();
@@ -51,6 +57,7 @@ const verifyEmail = catchAsync(async (req, res) => {
 module.exports = {
   register,
   login,
+  loginGoogle,
   logout,
   refreshTokens,
   forgotPassword,

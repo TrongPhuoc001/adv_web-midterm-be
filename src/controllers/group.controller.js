@@ -10,13 +10,23 @@ const createGroup = catchAsync(async (req, res) => {
 });
 
 const getAllMyGroups = catchAsync(async (req, res) => {
-    const groups = await groupService.getAllGroupsByUser(req.user);
-    res.send(groups);
+    const myGroups = await groupService.getMyGroup(req.user);
+    const joinGroups = await groupService.getJoinGroup(req.user);
+    res.send({myGroups, joinGroups});
+});
+
+const getGroupById = catchAsync(async (req, res) => { 
+    const group = await groupService.getGroupById(req.params.id);
+    if (!group) {
+      throw new ApiError(httpStatus.NOT_FOUND, 'Group not found');
+    }
+    res.send(group);
 });
 
 module.exports = {
     createGroup,
-    getAllMyGroups
+    getAllMyGroups,
+    getGroupById,
 };
 
 

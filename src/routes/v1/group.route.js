@@ -1,5 +1,5 @@
 const express = require('express');
-const auth = require('../../middlewares/auth');
+const { auth } = require('../../middlewares/auth');
 const groupController = require('../../controllers/group.controller');
 
 
@@ -12,5 +12,8 @@ router
 router
     .route('/get-my-group')
     .get(auth(), groupController.getAllMyGroups);
+router
+    .route('/:id')
+    .get(auth(), groupController.getGroupById);
 
 module.exports = router;

@@ -114,6 +114,10 @@ const getOrCreateUserByPayload = async (payload) => {
   return newUser;
 };
 
+const queryUserByEmail = async (email) => {
+  return User.find({ email: { $regex: email, $options: 'i' } }).limit(5);
+};
+
 module.exports = {
   createUser,
   queryUsers,
@@ -123,4 +127,5 @@ module.exports = {
   deleteUserById,
   updateUserImg,
   getOrCreateUserByPayload,
+  queryUserByEmail,
 };

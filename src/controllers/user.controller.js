@@ -44,6 +44,11 @@ const updateUserImg = catchAsync(async (req, res) => {
   res.send(user);
 });
 
+const queryUserByEmail = catchAsync(async (req, res) => {
+  const user = await userService.queryUserByEmail(req.query.email);
+  res.send(user);
+});
+
 module.exports = {
   createUser,
   getUsers,
@@ -52,4 +57,5 @@ module.exports = {
   deleteUser,
   updateUserInfo,
   updateUserImg,
+  queryUserByEmail,
 };

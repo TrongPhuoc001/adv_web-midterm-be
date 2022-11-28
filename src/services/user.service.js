@@ -101,7 +101,7 @@ const getOrCreateUserByPayload = async (payload) => {
     firstName: payload.given_name,
     lastName: payload.family_name,
     email: payload.email,
-    isEmailVerify: true,
+    isEmailVerified: true,
     role: 'user',
     imgUrl: payload.picture,
     social: {
@@ -114,8 +114,8 @@ const getOrCreateUserByPayload = async (payload) => {
   return newUser;
 };
 
-const queryUserByEmail = async (email) => {
-  return User.find({ email: { $regex: email, $options: 'i' } }).limit(5);
+const queryUserByEmail = async (email, exclude) => {
+  return User.find({ $and: [{ email: { $regex: email, $options: 'i' } }, { email: { $ne: exclude.email } }] }).limit(5);
 };
 
 module.exports = {

@@ -45,7 +45,7 @@ const updateUserImg = catchAsync(async (req, res) => {
 });
 
 const queryUserByEmail = catchAsync(async (req, res) => {
-  const user = await userService.queryUserByEmail(req.query.email);
+  const user = await userService.queryUserByEmail(req.query.email, req.user);
   res.send(user);
 });
 

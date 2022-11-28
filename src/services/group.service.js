@@ -1,4 +1,7 @@
+const httpStatus = require('http-status');
 const { Group } = require('../models');
+const ApiError = require('../utils/ApiError');
+const userService = require('./user.service');
 
 const createGroup = async (groupBody) => {
   const group = await Group.create(groupBody);
@@ -36,6 +39,41 @@ const addMember = async (group, member) => {
   return group;
 };
 
+const removeUserFromGroup = async (userId, groupId) => {
+  const group = await getGroupById(groupId);
+  if (!group) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Group not found');
+  }
+  const user = await userService.getUserById(userId);
+  if (!user) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+  }
+  group.members = group.members.filter((member) => member._id.toString() !== userId.toString());
+  group.coOwner = group.coOwner.filter((coOwner) => coOwner._id.toString() !== userId.toString());
+  await group.save();
+  return user;
+};
+
+const joinGroupByCode = async (code, user) => {
+  const group = await Group.findOne({ $and: [{ inviteCode: code }, { openForJoin: true }] })
+    .populate('owner')
+    .populate('members')
+    .populate('coOwner');
+  if (!group) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Group not found');
+  }
+  if (
+    group.members.find((u) => u._id.toString() === user._id.toString()) ||
+    group.owner._id.toString() === user._id.toString() ||
+    group.coOwner.find((u) => u._id.toString() === user._id.toString())
+  ) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'You are already a member of this group');
+  }
+  group.members.push(user);
+  await group.save();
+  return group;
+};
+
 module.exports = {
   createGroup,
   queryGroups,
@@ -45,4 +83,6 @@ module.exports = {
   getMyGroup,
   getJoinGroup,
   addMember,
+  removeUserFromGroup,
+  joinGroupByCode,
 };

@@ -5,6 +5,6 @@ const invitationController = require('../../controllers/invitation.controller');
 const router = express.Router();
 
 router.route('/').post(auth(), invitationController.invite);
-router.route('/except/:invitationId').get(auth(), invitationController.exceptInvite);
+router.route('/accepted/:invitationId').get(auth(), invitationController.exceptInvite);
 
 module.exports = router;

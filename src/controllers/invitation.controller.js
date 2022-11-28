@@ -1,7 +1,8 @@
 const httpStatus = require('http-status');
 const ApiError = require('../utils/ApiError');
 const catchAsync = require('../utils/catchAsync');
-const { groupService, invitationService, emailService } = require('../services');
+const config = require('../config/config');
+const { groupService, invitationService, emailService, userService } = require('../services');
 
 const invite = catchAsync(async (req, res, next) => {
   try {
@@ -10,10 +11,11 @@ const invite = catchAsync(async (req, res, next) => {
     if (!group) {
       throw new ApiError(httpStatus.NOT_FOUND, 'Group not found');
     }
-    if (group.owner.toString() !== req.user._id.toString()) {
+    if (group.owner._id.toString() !== req.user._id.toString()) {
       throw new ApiError(httpStatus.FORBIDDEN, 'You are not the owner of this group');
     }
-    users.forEach(async (user) => {
+    users.forEach(async (userId) => {
+      const user = await userService.getUserById(userId);
       if (group.coOwner.includes(user)) {
         throw new ApiError(httpStatus.FORBIDDEN, 'This user is already a co-owner of this group');
       }
@@ -21,10 +23,10 @@ const invite = catchAsync(async (req, res, next) => {
         throw new ApiError(httpStatus.FORBIDDEN, 'This user is already a member of this group');
       }
       const invitation = await invitationService.createInvitation({ group, sender: req.user, receiver: user });
-      const url = `http://localhost:3000/invitations/${invitation._id}`;
+      const url = `${config.frontend.host}/invitations/${invitation._id}`;
       await emailService.sendInvitationEmail(user.email, url);
-      res.status(httpStatus.CREATED).send(invitation);
     });
+    res.status(httpStatus.CREATED).send();
   } catch (error) {
     next(error);
   }
@@ -33,16 +35,9 @@ const invite = catchAsync(async (req, res, next) => {
 const exceptInvite = catchAsync(async (req, res, next) => {
   try {
     const { invitationId } = req.params;
-    const invitation = await invitationService.getInvitationById(invitationId);
-    if (!invitation) {
-      throw new ApiError(httpStatus.NOT_FOUND, 'Invitation not found');
-    }
-    if (invitation.receiver._id.toString() !== req.user._id.toString()) {
-      throw new ApiError(httpStatus.FORBIDDEN, 'You are not the receiver of this invitation');
-    }
-    await invitationService.exceptInvite(invitation);
-    await groupService.addMember(invitation.group, req.user);
-    res.status(httpStatus.NO_CONTENT).send();
+    const invitation = await invitationService.exceptInvite(invitationId, req.user);
+    const group = await groupService.addMember(invitation.group, req.user);
+    res.send(group);
   } catch (err) {
     next(err);
   }

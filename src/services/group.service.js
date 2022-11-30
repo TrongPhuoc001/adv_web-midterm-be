@@ -74,6 +74,61 @@ const joinGroupByCode = async (code, user) => {
   return group;
 };
 
+const setCoOwner = async (userId, groupId, userAuth) => { 
+  const group = await getGroupById(groupId);
+  if (!group) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Group not found');
+  }
+  if (group.owner._id.toString() !== userAuth._id.toString()) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'You are not the owner of this group');
+  }
+  const user = await userService.getUserById(userId);
+  if (!user) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+  }
+
+  const newMembers = group.members.filter((member) => member._id.toString() !== userId.toString());
+  if(newMembers.length === group.members.length){
+    throw new ApiError(httpStatus.BAD_REQUEST, 'User is not a member of this group');
+  }
+  // kiem tra xem user co phai la CoOwner hay khong
+  const Coowner = group.coOwner
+  if ( Coowner.find((u) => u._id.toString() === user._id.toString())) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'User is already a CoOwner of this group');
+  }
+  group.members = newMembers;
+  group.coOwner.push(user);
+  await group.save();
+  return group;
+}
+
+const setMember = async (userId, groupId, userAuth) => {
+  const group = await getGroupById(groupId);
+  if (!group) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Group not found');
+  }
+  if (group.owner._id.toString() !== userAuth._id.toString()) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'You are not the owner of this group');
+  }
+  const user = await userService.getUserById(userId);
+  if (!user) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
+  }
+
+  const newCoOwners = group.coOwner.filter((member) => member._id.toString() !== userId.toString());
+  if(newCoOwners.length === group.coOwner.length){
+    throw new ApiError(httpStatus.BAD_REQUEST, 'User is not a CoOwner of this group');
+  }
+
+  if ( group.members.find((u) => u._id.toString() === user._id.toString())) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'User is already a member of this group');
+  }
+  group.coOwner = newCoOwners;
+  group.members.push(user);
+  await group.save();
+  return group
+}
+
 module.exports = {
   createGroup,
   queryGroups,
@@ -85,4 +140,6 @@ module.exports = {
   addMember,
   removeUserFromGroup,
   joinGroupByCode,
+  setCoOwner,
+  setMember,
 };

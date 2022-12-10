@@ -4,6 +4,7 @@ const userRoute = require('./user.route');
 const docsRoute = require('./docs.route');
 const groupRoute = require('./group.route');
 const invitationRoute = require('./invitation.route');
+const presentationRoute = require('./presentation.route');
 const config = require('../../config/config');
 
 const router = express.Router();
@@ -24,6 +25,10 @@ const defaultRoutes = [
   {
     path: '/invite',
     route: invitationRoute,
+  },
+  {
+    path: '/presentations',
+    route: presentationRoute,
   },
 ];
 

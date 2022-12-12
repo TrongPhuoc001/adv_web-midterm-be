@@ -12,7 +12,9 @@ const presentationSchema = mongoose.Schema({
     required: true,
     trim: true,
     unique: true,
-    default: parseInt(Math.floor(Math.random() * 99999999), 10).toString(),
+    default: function () {
+      return parseInt(Math.floor(Math.random() * 99999999), 10).toString();
+    },
   },
   slices: [
     {

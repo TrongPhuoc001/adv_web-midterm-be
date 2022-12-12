@@ -4,9 +4,9 @@ const { toJSON, paginate } = require('./plugins');
 const sliceSchema = mongoose.Schema({
   type: {
     type: String,
-    required: true,
     trim: true,
-    enum: ['multipleChoice', 'heading', 'paragragh'],
+    nullAllowed: true,
+    enum: ['multipleChoice', 'heading', 'paragragh', null],
   },
   heading: {
     type: String,
@@ -20,11 +20,6 @@ const sliceSchema = mongoose.Schema({
   },
   options: [
     {
-      id: {
-        type: String,
-        required: true,
-        trim: true,
-      },
       name: {
         type: String,
         required: true,

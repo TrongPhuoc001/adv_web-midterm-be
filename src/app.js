@@ -7,6 +7,8 @@ const cors = require('cors');
 const passport = require('passport');
 const httpStatus = require('http-status');
 const fileUpload = require('express-fileupload');
+const { Server } = require('socket.io');
+const http = require('http');
 const config = require('./config/config');
 const morgan = require('./config/morgan');
 const { jwtStrategy, googleStrategy } = require('./config/passport');
@@ -14,8 +16,19 @@ const { authLimiter } = require('./middlewares/rateLimiter');
 const routes = require('./routes/v1');
 const { errorConverter, errorHandler } = require('./middlewares/error');
 const ApiError = require('./utils/ApiError');
-
+const { initSocket } = require('./sockets');
+const redisClient = require('./config/redis');
 const app = express();
+
+const server = http.createServer(app);
+
+redisClient.connect();
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+  },
+});
+initSocket(io);
 
 if (config.env !== 'test') {
   app.use(morgan.successHandler);
@@ -68,4 +81,4 @@ app.use(errorConverter);
 // handle error
 app.use(errorHandler);
 
-module.exports = app;
+module.exports = server;

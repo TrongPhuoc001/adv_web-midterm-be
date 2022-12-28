@@ -16,6 +16,14 @@ router.route('/:id/remove/:slideId').delete(auth(), presentationController.delet
 
 router.route('/:id/update/:slideId').put(auth(), presentationController.updateSlide);
 
+router.route('/:id/collaborators').get(auth(), presentationController.getPresentationCollaborators);
+
+router.route('/:id/collaborators/add').post(auth(), presentationController.addCollaborator);
+
+router.route('/:id/collaborators/add-multi').post(auth(), presentationController.addMultipleCollaborators);
+
+router.route('/:id/collaborators/remove/:collaboratorId').delete(auth(), presentationController.removeCollaborator);
+
 router.route('/:id/show').get(auth(), presentationController.showPresentation);
 router.route('/:id').get(auth(), presentationController.getPresentation);
 

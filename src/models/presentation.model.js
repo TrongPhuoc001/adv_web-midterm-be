@@ -1,3 +1,4 @@
+/* eslint-disable object-shorthand */
 const mongoose = require('mongoose');
 const { toJSON, paginate } = require('./plugins');
 
@@ -28,6 +29,12 @@ const presentationSchema = mongoose.Schema({
     ref: 'User',
     required: true,
   },
+  collaborators: [
+    {
+      type: mongoose.SchemaTypes.ObjectId,
+      ref: 'User',
+    },
+  ],
   group: {
     type: mongoose.SchemaTypes.ObjectId,
     ref: 'Group',

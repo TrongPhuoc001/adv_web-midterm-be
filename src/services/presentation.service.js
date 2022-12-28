@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const httpStatus = require('http-status');
 const { Presentation, Slice } = require('../models');
 const ApiError = require('../utils/ApiError');
@@ -32,7 +33,12 @@ const createPresentation = async (presentationBody) => {
 
 const getPresentations = async (userId) => {
   return Presentation.find({
-    owner: userId,
+    $or: [
+      { owner: userId },
+      {
+        collaborators: userId,
+      },
+    ],
   });
 };
 
@@ -67,7 +73,10 @@ const addSlide = async (presentationId, userId) => {
   if (!presentation) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Presentation not found');
   }
-  if (presentation.owner._id.toString() !== userId.toString()) {
+  if (
+    presentation.owner._id.toString() !== userId.toString() &&
+    !presentation.collaborators.includes(mongoose.Types.ObjectId(userId))
+  ) {
     throw new ApiError(httpStatus.FORBIDDEN, 'You are not the owner of this presentation');
   }
   const slice = await Slice.create({
@@ -86,7 +95,10 @@ const deleteSlide = async (presentationId, slideId, userId) => {
   if (!presentation) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Presentation not found');
   }
-  if (presentation.owner._id.toString() !== userId.toString()) {
+  if (
+    presentation.owner._id.toString() !== userId.toString() &&
+    !presentation.collaborators.includes(mongoose.Types.ObjectId(userId))
+  ) {
     throw new ApiError(httpStatus.FORBIDDEN, 'You are not the owner of this presentation');
   }
   const slice = await Slice.findById(slideId);
@@ -101,7 +113,10 @@ const updateSlide = async (presentationId, slideId, slideBody, userId) => {
   if (!presentation) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Presentation not found');
   }
-  if (presentation.owner._id.toString() !== userId.toString()) {
+  if (
+    presentation.owner._id.toString() !== userId.toString() &&
+    !presentation.collaborators.includes(mongoose.Types.ObjectId(userId))
+  ) {
     throw new ApiError(httpStatus.FORBIDDEN, 'You are not the owner of this presentation');
   }
   const slice = await Slice.findById(slideId);
@@ -118,9 +133,8 @@ const updateSlideOptions = async (slideId, option) => {
   slide.options = slide.options.map((opt) => {
     if (opt._id.toString() === option._id.toString()) {
       return option;
-    } else {
-      return opt;
     }
+    return opt;
   });
   await slide.save();
   return slide;
@@ -130,6 +144,58 @@ const getPresentationByCode = async (code) => {
   return Presentation.findOne({
     code,
   });
+};
+
+const getPresentationCollaborators = async (presentationId, userId) => {
+  const presentation = await Presentation.findOne({
+    _id: presentationId,
+    owner: userId,
+  }).populate('collaborators');
+  if (!presentation) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Presentation not found');
+  }
+  return presentation.collaborators;
+};
+
+const addCollaborator = async (presentationId, collaboratorId, userId) => {
+  const presentation = await Presentation.findOne({
+    _id: presentationId,
+    owner: userId,
+  });
+  if (!presentation) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Presentation not found');
+  }
+  presentation.collaborators.push(collaboratorId);
+  await presentation.save();
+  return presentation;
+};
+
+const addMultipleCollaborators = async (presentationId, collaboratorIds, userId) => {
+  const presentation = await Presentation.findOne({
+    _id: presentationId,
+    owner: userId,
+  });
+  if (!presentation) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Presentation not found');
+  }
+  presentation.collaborators = presentation.collaborators.concat(collaboratorIds);
+  await presentation.save();
+  return presentation;
+};
+
+const removeCollaborator = async (presentationId, collaboratorId, userId) => {
+  const presentation = await Presentation.findOne({
+    _id: presentationId,
+    owner: userId,
+  });
+  if (!presentation) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Presentation not found');
+  }
+  presentation.collaborators = presentation.collaborators.filter(
+    (collaborator) => collaborator._id.toString() !== collaboratorId.toString()
+  );
+  await presentation.save();
+  return presentation;
 };
 
 module.exports = {
@@ -143,4 +209,8 @@ module.exports = {
   updateSlide,
   getPresentationByCode,
   updateSlideOptions,
+  getPresentationCollaborators,
+  addCollaborator,
+  removeCollaborator,
+  addMultipleCollaborators,
 };

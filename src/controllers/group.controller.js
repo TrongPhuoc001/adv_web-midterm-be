@@ -59,20 +59,19 @@ const joinGroupByCode = catchAsync(async (req, res) => {
   res.send(group);
 });
 
-const setCoOwner = catchAsync(async(req, res) =>{
-  const user = req.user;
+const setCoOwner = catchAsync(async (req, res) => {
+  const { user } = req;
   const { userId, groupId } = req.body;
   const group = await groupService.setCoOwner(userId, groupId, user);
   res.send(group);
-} );
+});
 
-const setMember = catchAsync(async(req, res) =>{
-  const user = req.user;
+const setMember = catchAsync(async (req, res) => {
+  const { user } = req;
   const { userId, groupId } = req.body;
   const group = await groupService.setMember(userId, groupId, user);
   res.send(group);
 });
-
 
 module.exports = {
   createGroup,

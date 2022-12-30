@@ -25,6 +25,7 @@ router.route('/:id/collaborators/add-multi').post(auth(), presentationController
 router.route('/:id/collaborators/remove/:collaboratorId').delete(auth(), presentationController.removeCollaborator);
 
 router.route('/:id/show').get(auth(), presentationController.showPresentation);
+router.route('/:id/show-in-group').post(auth(), presentationController.showPresentationInGroup);
 router.route('/:id').get(auth(), presentationController.getPresentation);
 
 router.route('/:id').put(auth(), presentationController.updatePresentation);

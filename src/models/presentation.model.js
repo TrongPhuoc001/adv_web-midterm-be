@@ -35,11 +35,11 @@ const presentationSchema = mongoose.Schema({
       ref: 'User',
     },
   ],
-  group: {
-    type: mongoose.SchemaTypes.ObjectId,
-    ref: 'Group',
-  },
   isShowing: {
+    type: Boolean,
+    default: false,
+  },
+  isShowInGroup: {
     type: Boolean,
     default: false,
   },

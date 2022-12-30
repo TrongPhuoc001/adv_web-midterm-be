@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const ApiError = require('../utils/ApiError');
 const catchAsync = require('../utils/catchAsync');
 const { presentationService } = require('../services');
+const { groupService } = require('../services');
 const redisClient = require('../config/redis');
 
 const requireRole = (presentation, userId) => {
@@ -59,8 +60,23 @@ const showPresentation = catchAsync(async (req, res) => {
   requireRole(presentation, req.user._id);
   presentation.isShowing = !presentation.isShowing;
   if (!presentation.isShowing) {
+    presentation.isShowInGroup = false;
     await redisClient.del(presentation.code);
   }
+  await presentation.save();
+  res.send(presentation);
+});
+
+const showPresentationInGroup = catchAsync(async (req, res) => {
+  const presentation = await presentationService.getPresentation(req.params.id);
+  if (!presentation) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Presentation not found');
+  }
+  requireRole(presentation, req.user._id);
+  presentation.isShowing = true;
+  presentation.isShowInGroup = true;
+  const { groupId } = req.body;
+  await groupService.setPresentation(groupId, presentation._id);
   await presentation.save();
   res.send(presentation);
 });
@@ -99,6 +115,9 @@ const joinPresentation = catchAsync(async (req, res) => {
   }
   if (!presentation.isShowing) {
     throw new ApiError(httpStatus.FORBIDDEN, 'Presentation is not showing');
+  }
+  if (presentation.isShowInGroup) {
+    throw new ApiError(httpStatus.FORBIDDEN, 'Presentation is not public');
   }
   res.send(true);
 });
@@ -156,4 +175,5 @@ module.exports = {
   addCollaborator,
   removeCollaborator,
   addMultipleCollaborators,
+  showPresentationInGroup,
 };

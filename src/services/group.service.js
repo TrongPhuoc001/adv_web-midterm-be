@@ -14,7 +14,11 @@ const queryGroups = async (filter, options) => {
 };
 
 const getGroupById = async (id) => {
-  return Group.findById(id).populate('owner').populate('members').populate('coOwner');
+  return Group.findById(id);
+};
+
+const getGroupDetail = async (id) => {
+  return Group.findById(id).populate('owner').populate('members').populate('coOwner').populate('presentation');
 };
 
 const getGroupByOwner = async (owner) => {
@@ -48,8 +52,8 @@ const removeUserFromGroup = async (userId, groupId) => {
   if (!user) {
     throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
   }
-  group.members = group.members.filter((member) => member._id.toString() !== userId.toString());
-  group.coOwner = group.coOwner.filter((coOwner) => coOwner._id.toString() !== userId.toString());
+  group.members = group.members.filter((member) => member.toString() !== userId.toString());
+  group.coOwner = group.coOwner.filter((coOwner) => coOwner.toString() !== userId.toString());
   await group.save();
   return user;
 };
@@ -74,12 +78,12 @@ const joinGroupByCode = async (code, user) => {
   return group;
 };
 
-const setCoOwner = async (userId, groupId, userAuth) => { 
+const setCoOwner = async (userId, groupId, userAuth) => {
   const group = await getGroupById(groupId);
   if (!group) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Group not found');
   }
-  if (group.owner._id.toString() !== userAuth._id.toString()) {
+  if (group.owner.toString() !== userAuth._id.toString()) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'You are not the owner of this group');
   }
   const user = await userService.getUserById(userId);
@@ -87,27 +91,27 @@ const setCoOwner = async (userId, groupId, userAuth) => {
     throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
   }
 
-  const newMembers = group.members.filter((member) => member._id.toString() !== userId.toString());
-  if(newMembers.length === group.members.length){
+  const newMembers = group.members.filter((member) => member.toString() !== userId.toString());
+  if (newMembers.length === group.members.length) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'User is not a member of this group');
   }
   // kiem tra xem user co phai la CoOwner hay khong
-  const Coowner = group.coOwner
-  if ( Coowner.find((u) => u._id.toString() === user._id.toString())) {
+  const Coowner = group.coOwner;
+  if (Coowner.find((u) => u.toString() === user._id.toString())) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'User is already a CoOwner of this group');
   }
   group.members = newMembers;
   group.coOwner.push(user);
   await group.save();
   return group;
-}
+};
 
 const setMember = async (userId, groupId, userAuth) => {
   const group = await getGroupById(groupId);
   if (!group) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Group not found');
   }
-  if (group.owner._id.toString() !== userAuth._id.toString()) {
+  if (group.owner.toString() !== userAuth._id.toString()) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'You are not the owner of this group');
   }
   const user = await userService.getUserById(userId);
@@ -115,19 +119,29 @@ const setMember = async (userId, groupId, userAuth) => {
     throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
   }
 
-  const newCoOwners = group.coOwner.filter((member) => member._id.toString() !== userId.toString());
-  if(newCoOwners.length === group.coOwner.length){
+  const newCoOwners = group.coOwner.filter((member) => member.toString() !== userId.toString());
+  if (newCoOwners.length === group.coOwner.length) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'User is not a CoOwner of this group');
   }
 
-  if ( group.members.find((u) => u._id.toString() === user._id.toString())) {
+  if (group.members.find((u) => u.toString() === user._id.toString())) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'User is already a member of this group');
   }
   group.coOwner = newCoOwners;
   group.members.push(user);
   await group.save();
-  return group
-}
+  return group;
+};
+
+const setPresentation = async (groupId, presentation) => {
+  const group = await getGroupById(groupId);
+  if (!group) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Group not found');
+  }
+  group.presentation = presentation;
+  await group.save();
+  return group;
+};
 
 module.exports = {
   createGroup,
@@ -142,4 +156,6 @@ module.exports = {
   joinGroupByCode,
   setCoOwner,
   setMember,
+  getGroupDetail,
+  setPresentation,
 };

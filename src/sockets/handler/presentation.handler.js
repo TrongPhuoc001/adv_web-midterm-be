@@ -12,6 +12,10 @@ function presentationHandler(socket, io) {
     io.emit(`presentation:${data.code}:slide`, data.slide);
   });
 
+  socket.on('presentation:updateSlide', async (data) => {
+    io.emit(`presentation:${data.code}:updateSlide`, data.data);
+  });
+
   socket.on('presentation:answer', async (data) => {
     const oldSlideJSON = await redisClient.get(data.code);
     const oldSlide = JSON.parse(oldSlideJSON);

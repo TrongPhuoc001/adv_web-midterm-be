@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const httpStatus = require('http-status');
 const { Presentation, Slice } = require('../models');
+const userService = require('./user.service');
 const ApiError = require('../utils/ApiError');
 
 const createPresentation = async (presentationBody) => {
@@ -140,6 +141,36 @@ const updateSlideOptions = async (slideId, option) => {
   return slide;
 };
 
+const addAnswer = async (slideId, answer, userId) => {
+  const slide = await Slice.findById(slideId);
+  if (!slide) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Slide not found');
+  }
+  if (!slide.answers) slide.answers = [];
+  if (slide.answers.find((a) => a.user._id.toString() === userId.toString())) {
+    return;
+  }
+  if (userId) {
+    const user = await userService.getUserById(userId);
+    slide.answers.push({
+      user,
+      answer: answer.name,
+    });
+  }
+  slide.options = slide.options.map((opt) => {
+    if (opt._id.toString() === answer._id.toString()) {
+      return {
+        _id: opt._id,
+        name: opt.name,
+        count: opt.count + 1,
+      };
+    }
+    return opt;
+  });
+  await slide.save();
+  return slide;
+};
+
 const getPresentationByCode = async (code) => {
   return Presentation.findOne({
     code,
@@ -213,4 +244,5 @@ module.exports = {
   addCollaborator,
   removeCollaborator,
   addMultipleCollaborators,
+  addAnswer,
 };

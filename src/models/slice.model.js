@@ -31,6 +31,19 @@ const sliceSchema = mongoose.Schema({
       },
     },
   ],
+  answers: [
+    {
+      user: {
+        type: mongoose.SchemaTypes.ObjectId,
+        ref: 'User',
+      },
+      answer: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+    },
+  ],
 });
 
 sliceSchema.plugin(toJSON);

@@ -89,13 +89,18 @@ const updateUserImg = async (userId, imgUrl) => {
   return user;
 };
 
-const getOrCreateUserByPayload = async (payload) => {
+const getOrCreateUserByPayload = async (payload, type) => {
   const user = await User.findOne({
     $or: [{ 'socical.google.id': payload.sub }, { 'socical.facebook.id': payload.sub }, { email: payload.email }],
   });
   if (user) {
     return user;
   }
+  const social = {};
+  social[type] = {
+    id: payload.sub,
+    email: payload.email,
+  };
 
   const newUser = await createUser({
     firstName: payload.given_name,
@@ -104,12 +109,7 @@ const getOrCreateUserByPayload = async (payload) => {
     isEmailVerified: true,
     role: 'user',
     imgUrl: payload.picture,
-    social: {
-      google: {
-        id: payload.sub,
-        email: payload.email,
-      },
-    },
+    social,
   });
   return newUser;
 };

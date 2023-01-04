@@ -44,7 +44,13 @@ const getPresentations = async (userId) => {
 };
 
 const getPresentation = async (presentationId) => {
-  return Presentation.findById(presentationId).populate('slices');
+  return Presentation.findById(presentationId).populate({
+    path: 'slices',
+    populate: {
+      path: 'answers.user',
+      select: 'name email ',
+    },
+  });
 };
 
 const deletePresentation = async (presentationId, userId) => {

@@ -41,7 +41,7 @@ const googleAuth = async (req, res, next) => {
       audience: config.google.clientId,
     });
     const payload = ticket.getPayload();
-    const user = await userService.getOrCreateUserByPayload(payload);
+    const user = await userService.getOrCreateUserByPayload(payload, 'google');
     req.user = user;
     next();
   } catch (err) {
@@ -49,7 +49,30 @@ const googleAuth = async (req, res, next) => {
   }
 };
 
+// const facebookAuth = async (req, res, next) => {
+//   try {
+//     const resposnes = await axios.get(
+//       `https://graph.facebook.com/v11.0/me?fields=id,name,email,picture&access_token=${req.body.accessToken}`
+//     );
+//     const payload = resposnes.data;
+//     const user = await userService.getOrCreateUserByPayload(
+//       {
+//         sub: payload.id,
+//         email: payload.email,
+//         given_name: payload.name,
+//         family_name: '',
+//         picture: payload.picture.data.url,
+//       },
+//       'facebook'
+//     );
+//     req.user = user;
+//   } catch (err) {
+//     next(err);
+//   }
+// };
+
 module.exports = {
   auth,
   googleAuth,
+  // facebookAuth,
 };

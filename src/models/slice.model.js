@@ -42,6 +42,10 @@ const sliceSchema = mongoose.Schema({
         required: true,
         trim: true,
       },
+      createAt: {
+        type: Date,
+        default: Date.now,
+      },
     },
   ],
 });

@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const httpStatus = require('http-status');
-const { Presentation, Slice } = require('../models');
+const { Presentation, Slice, Message } = require('../models');
 const userService = require('./user.service');
 const ApiError = require('../utils/ApiError');
 
@@ -74,6 +74,67 @@ const updatePresentation = async (presentationId, presentationBody) => {
   await presentation.save();
   return presentation;
 };
+
+const getPresentationByCode = async (code) => {
+  return Presentation.findOne({
+    code,
+  });
+};
+
+const getPresentationCollaborators = async (presentationId, userId) => {
+  const presentation = await Presentation.findOne({
+    _id: presentationId,
+    owner: userId,
+  }).populate('collaborators');
+  if (!presentation) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Presentation not found');
+  }
+  return presentation.collaborators;
+};
+// collaborator management
+
+const addCollaborator = async (presentationId, collaboratorId, userId) => {
+  const presentation = await Presentation.findOne({
+    _id: presentationId,
+    owner: userId,
+  });
+  if (!presentation) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Presentation not found');
+  }
+  presentation.collaborators.push(collaboratorId);
+  await presentation.save();
+  return presentation;
+};
+
+const addMultipleCollaborators = async (presentationId, collaboratorIds, userId) => {
+  const presentation = await Presentation.findOne({
+    _id: presentationId,
+    owner: userId,
+  });
+  if (!presentation) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Presentation not found');
+  }
+  presentation.collaborators = presentation.collaborators.concat(collaboratorIds);
+  await presentation.save();
+  return presentation;
+};
+
+const removeCollaborator = async (presentationId, collaboratorId, userId) => {
+  const presentation = await Presentation.findOne({
+    _id: presentationId,
+    owner: userId,
+  });
+  if (!presentation) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Presentation not found');
+  }
+  presentation.collaborators = presentation.collaborators.filter(
+    (collaborator) => collaborator._id.toString() !== collaboratorId.toString()
+  );
+  await presentation.save();
+  return presentation;
+};
+
+// slide management
 
 const addSlide = async (presentationId, userId) => {
   const presentation = await getPresentation(presentationId);
@@ -177,62 +238,48 @@ const addAnswer = async (slideId, answer, userId) => {
   return slide;
 };
 
-const getPresentationByCode = async (code) => {
-  return Presentation.findOne({
-    code,
-  });
-};
+// chat management
 
-const getPresentationCollaborators = async (presentationId, userId) => {
-  const presentation = await Presentation.findOne({
-    _id: presentationId,
-    owner: userId,
-  }).populate('collaborators');
+const addMessage = async (presentationCode, messageBody, userId) => {
+  const presentation = await Presentation.findOne({ code: presentationCode });
   if (!presentation) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Presentation not found');
   }
-  return presentation.collaborators;
+  let message = {};
+  if (userId) {
+    const user = await userService.getUserById(userId);
+    message = await Message.create({
+      user,
+      message: messageBody,
+    });
+  } else {
+    message = await Message.create({
+      message: messageBody,
+    });
+  }
+  message.presentation = presentation._id;
+  await message.save();
+  return message;
 };
 
-const addCollaborator = async (presentationId, collaboratorId, userId) => {
-  const presentation = await Presentation.findOne({
-    _id: presentationId,
-    owner: userId,
-  });
+const getChat = async (presentationCode, page) => {
+  const presentation = await Presentation.findOne({ code: presentationCode });
   if (!presentation) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Presentation not found');
   }
-  presentation.collaborators.push(collaboratorId);
-  await presentation.save();
-  return presentation;
-};
-
-const addMultipleCollaborators = async (presentationId, collaboratorIds, userId) => {
-  const presentation = await Presentation.findOne({
-    _id: presentationId,
-    owner: userId,
-  });
-  if (!presentation) {
-    throw new ApiError(httpStatus.NOT_FOUND, 'Presentation not found');
-  }
-  presentation.collaborators = presentation.collaborators.concat(collaboratorIds);
-  await presentation.save();
-  return presentation;
-};
-
-const removeCollaborator = async (presentationId, collaboratorId, userId) => {
-  const presentation = await Presentation.findOne({
-    _id: presentationId,
-    owner: userId,
-  });
-  if (!presentation) {
-    throw new ApiError(httpStatus.NOT_FOUND, 'Presentation not found');
-  }
-  presentation.collaborators = presentation.collaborators.filter(
-    (collaborator) => collaborator._id.toString() !== collaboratorId.toString()
-  );
-  await presentation.save();
-  return presentation;
+  const chats = await Message.find(
+    {
+      presentation: presentation._id,
+    },
+    null,
+    {
+      sort: { createdAt: -1 },
+    }
+  )
+    .populate('user')
+    .skip(page * 5)
+    .limit(5);
+  return chats;
 };
 
 module.exports = {
@@ -251,4 +298,6 @@ module.exports = {
   removeCollaborator,
   addMultipleCollaborators,
   addAnswer,
+  addMessage,
+  getChat,
 };

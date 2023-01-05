@@ -24,38 +24,6 @@ const presentationSchema = mongoose.Schema({
       required: true,
     },
   ],
-  chats: [
-    {
-      user: {
-        type: mongoose.SchemaTypes.ObjectId,
-        ref: 'User',
-      },
-      message: {
-        type: String,
-        required: true,
-      },
-    },
-  ],
-  questions: [
-    {
-      user: {
-        type: mongoose.SchemaTypes.ObjectId,
-        ref: 'User',
-      },
-      question: {
-        type: String,
-        required: true,
-      },
-      upvotes: {
-        type: Number,
-        default: 0,
-      },
-      answered: {
-        type: Boolean,
-        default: false,
-      },
-    },
-  ],
   owner: {
     type: mongoose.SchemaTypes.ObjectId,
     ref: 'User',

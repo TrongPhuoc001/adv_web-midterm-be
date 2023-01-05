@@ -76,7 +76,7 @@ const showPresentationInGroup = catchAsync(async (req, res) => {
   presentation.isShowing = true;
   presentation.isShowInGroup = true;
   const { groupId } = req.body;
-  await groupService.setPresentation(groupId, presentation._id);
+  await groupService.setPresentation(groupId, presentation._id, req.user._id);
   await presentation.save();
   res.send(presentation);
 });

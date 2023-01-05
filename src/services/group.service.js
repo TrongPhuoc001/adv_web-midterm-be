@@ -133,10 +133,13 @@ const setMember = async (userId, groupId, userAuth) => {
   return group;
 };
 
-const setPresentation = async (groupId, presentation) => {
+const setPresentation = async (groupId, presentation, userId) => {
   const group = await getGroupById(groupId);
   if (!group) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Group not found');
+  }
+  if (group.owner.toString() !== userId.toString() && group.coOwner.find((u) => u.toString() === userId.toString())) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'You are not the owner or coOwner of this group');
   }
   group.presentation = presentation;
   await group.save();

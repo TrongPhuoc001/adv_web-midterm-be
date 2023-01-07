@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const httpStatus = require('http-status');
-const { Presentation, Slice, Message } = require('../models');
+const { Presentation, Slice, Message, Question } = require('../models');
 const userService = require('./user.service');
 const ApiError = require('../utils/ApiError');
 
@@ -246,7 +246,8 @@ const addMessage = async (presentationCode, messageBody, userId) => {
     throw new ApiError(httpStatus.NOT_FOUND, 'Presentation not found');
   }
   let message = {};
-  if (userId) {
+  console.log(userId);
+  if (userId && userId !==   1) {
     const user = await userService.getUserById(userId);
     message = await Message.create({
       user,
@@ -282,6 +283,89 @@ const getChat = async (presentationCode, page) => {
   return chats;
 };
 
+// question management
+
+const addQuestion = async (presenationCode, questionBody, userId) => {
+  const presentation = await Presentation.findOne({ code: presenationCode });
+  if (!presentation) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Presentation not found');
+  }
+  let question = {};
+  if (userId && userId !==   1) {
+    const user = await userService.getUserById(userId);
+    question = await Question.create({
+      user,
+      question: questionBody,
+    });
+  } else {
+    question = await Question.create({
+      question: questionBody,
+    });
+  }
+  question.presentation = presentation._id;
+  await question.save();
+  return question;
+};
+
+const getQuestion = async (presentationCode, page) => {
+  const presentation = await Presentation.findOne({ code: presentationCode });
+  if (!presentation) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Presentation not found');
+  }
+  const questions = await Question.find(
+    {
+      presentation: presentation._id,
+    },
+    null,
+    {
+      sort: { upvotes: -1, answered: -1},
+
+    }
+  )
+    .populate('user')
+    .skip(page * 5)
+    .limit(5);
+  return questions;
+};
+
+const voteQuestion = async (questionId, userId, randomNumber) => {
+  const question = await Question.findById(questionId);
+  if (!question) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Question not found');
+  }
+  if(!question.voted) {
+    question.voted = [];
+  }
+  if (userId) {
+    
+    if(question.voted.includes(userId)){
+      question.voted = question.voted.filter((u) => u.toString() !== userId.toString());
+      question.upvotes -= 1;
+    } else {
+      question.voted.push(userId);
+      question.upvotes += 1;
+    }
+  } else {
+    if(question.voted.includes(randomNumber)){
+      question.voted = question.voted.filter((u) => u.toString() !== randomNumber.toString());
+      question.upvotes -= 1;
+    } else {
+      question.voted.push(randomNumber);
+      question.upvotes += 1;
+    }
+  }
+  await question.save();
+  return question;
+}
+const answeredQuestion = async (questionId) => {
+  const question = await Question.findById(questionId);
+  if (!question) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Question not found');
+  }
+  question.answered = true;
+  await question.save();
+  return question;
+}
 module.exports = {
   createPresentation,
   getPresentations,
@@ -300,4 +384,8 @@ module.exports = {
   addAnswer,
   addMessage,
   getChat,
+  addQuestion,
+  getQuestion,
+  voteQuestion,
+  answeredQuestion
 };

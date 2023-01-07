@@ -6,7 +6,7 @@ const sliceSchema = mongoose.Schema({
     type: String,
     trim: true,
     nullAllowed: true,
-    enum: ['multipleChoice', 'heading', 'paragragh', null],
+    enum: ['multipleChoice', 'heading', 'paragraph', null],
   },
   heading: {
     type: String,

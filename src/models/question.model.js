@@ -10,9 +10,22 @@ const questionSchema = mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-  message: {
+  question: {
     type: String,
     required: true,
+  },
+  upvotes: {
+    type: Number,
+    default: 0,
+  },
+  voted: [
+    {
+      type: String,
+    },
+  ],
+  answered: {
+    type: Boolean,
+    default: false,
   },
   presentation: {
     type: mongoose.SchemaTypes.ObjectId,

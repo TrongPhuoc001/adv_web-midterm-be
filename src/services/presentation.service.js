@@ -246,8 +246,7 @@ const addMessage = async (presentationCode, messageBody, userId) => {
     throw new ApiError(httpStatus.NOT_FOUND, 'Presentation not found');
   }
   let message = {};
-  console.log(userId);
-  if (userId && userId !==   1) {
+  if (userId && userId !== 1) {
     const user = await userService.getUserById(userId);
     message = await Message.create({
       user,
@@ -291,7 +290,7 @@ const addQuestion = async (presenationCode, questionBody, userId) => {
     throw new ApiError(httpStatus.NOT_FOUND, 'Presentation not found');
   }
   let question = {};
-  if (userId && userId !==   1) {
+  if (userId && userId !== 1) {
     const user = await userService.getUserById(userId);
     question = await Question.create({
       user,
@@ -318,8 +317,7 @@ const getQuestion = async (presentationCode, page) => {
     },
     null,
     {
-      sort: { upvotes: -1, answered: -1},
-
+      sort: { upvotes: -1, answered: -1 },
     }
   )
     .populate('user')
@@ -333,30 +331,27 @@ const voteQuestion = async (questionId, userId, randomNumber) => {
   if (!question) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Question not found');
   }
-  if(!question.voted) {
+  if (!question.voted) {
     question.voted = [];
   }
   if (userId) {
-    
-    if(question.voted.includes(userId)){
+    if (question.voted.includes(userId)) {
       question.voted = question.voted.filter((u) => u.toString() !== userId.toString());
       question.upvotes -= 1;
     } else {
       question.voted.push(userId);
       question.upvotes += 1;
     }
+  } else if (question.voted.includes(randomNumber)) {
+    question.voted = question.voted.filter((u) => u.toString() !== randomNumber.toString());
+    question.upvotes -= 1;
   } else {
-    if(question.voted.includes(randomNumber)){
-      question.voted = question.voted.filter((u) => u.toString() !== randomNumber.toString());
-      question.upvotes -= 1;
-    } else {
-      question.voted.push(randomNumber);
-      question.upvotes += 1;
-    }
+    question.voted.push(randomNumber);
+    question.upvotes += 1;
   }
   await question.save();
   return question;
-}
+};
 const answeredQuestion = async (questionId) => {
   const question = await Question.findById(questionId);
   if (!question) {
@@ -365,7 +360,7 @@ const answeredQuestion = async (questionId) => {
   question.answered = true;
   await question.save();
   return question;
-}
+};
 module.exports = {
   createPresentation,
   getPresentations,
@@ -387,5 +382,5 @@ module.exports = {
   addQuestion,
   getQuestion,
   voteQuestion,
-  answeredQuestion
+  answeredQuestion,
 };

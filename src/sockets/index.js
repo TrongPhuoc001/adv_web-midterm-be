@@ -1,8 +1,8 @@
-const { presentationHandler } = require('./handler/presentation.handler');
+const { presentationHandler } = require('./handler/presentation/presentation.handler');
 const logger = require('../config/logger');
 
 const initSocket = (io) => {
-  console.log('SOCKET : init socket');
+  logger.info('SOCKET : init socket');
   io.on('connection', (socket) => {
     logger.info('SOCKET : a user connected');
     presentationHandler(socket, io);

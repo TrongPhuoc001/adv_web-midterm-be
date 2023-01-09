@@ -214,10 +214,10 @@ const addAnswer = async (slideId, answer, userId) => {
     throw new ApiError(httpStatus.NOT_FOUND, 'Slide not found');
   }
   if (!slide.answers) slide.answers = [];
-  if (slide.answers.find((a) => a.user._id.toString() === userId.toString())) {
-    return;
-  }
   if (userId) {
+    if (slide.answers.find((a) => a.user._id.toString() === userId.toString())) {
+      return;
+    }
     const user = await userService.getUserById(userId);
     slide.answers.push({
       user,

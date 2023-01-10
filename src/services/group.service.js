@@ -146,6 +146,18 @@ const setPresentation = async (groupId, presentation, userId) => {
   return group;
 };
 
+const removeGroup = async (groupId, user) => {
+  const group = await getGroupById(groupId);
+  if (!group) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Group not found');
+  }
+  if (group.owner.toString() !== user._id.toString()) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'You are not the owner of this group');
+  }
+  await group.remove();
+  return group;
+};
+
 module.exports = {
   createGroup,
   queryGroups,
@@ -161,4 +173,5 @@ module.exports = {
   setMember,
   getGroupDetail,
   setPresentation,
+  removeGroup,
 };

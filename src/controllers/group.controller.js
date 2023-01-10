@@ -73,6 +73,13 @@ const setMember = catchAsync(async (req, res) => {
   res.send(group);
 });
 
+const removeGroup = catchAsync(async (req, res) => {
+  const { user } = req;
+  const { groupId } = req.params;
+  const group = await groupService.removeGroup(groupId, user);
+  res.send(group);
+});
+
 module.exports = {
   createGroup,
   getAllMyGroups,
@@ -82,4 +89,5 @@ module.exports = {
   joinGroupByCode,
   setCoOwner,
   setMember,
+  removeGroup,
 };

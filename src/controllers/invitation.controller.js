@@ -32,15 +32,11 @@ const invite = catchAsync(async (req, res, next) => {
   }
 });
 
-const exceptInvite = catchAsync(async (req, res, next) => {
-  try {
-    const { invitationId } = req.params;
-    const invitation = await invitationService.exceptInvite(invitationId, req.user);
-    const group = await groupService.addMember(invitation.group, req.user);
-    res.send(group);
-  } catch (err) {
-    next(err);
-  }
+const exceptInvite = catchAsync(async (req, res) => {
+  const { invitationId } = req.params;
+  const invitation = await invitationService.exceptInvite(invitationId, req.user);
+  const group = await groupService.addMember(invitation.group, req.user);
+  res.send(group);
 });
 
 module.exports = {

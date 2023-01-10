@@ -32,7 +32,7 @@ const groupSchema = mongoose.Schema({
     required: true,
     trim: true,
     unique: true,
-    default: Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15),
+    default: () => Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15),
   },
   openForJoin: {
     type: Boolean,
